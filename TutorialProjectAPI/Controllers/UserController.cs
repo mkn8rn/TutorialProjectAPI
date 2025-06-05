@@ -22,8 +22,7 @@ namespace TutorialProjectAPI.Controllers
         [HttpPost]
         public IActionResult CreateUser([FromBody] UserDB user)
         {
-            if (user == null)
-                return BadRequest();
+
 
             _userRepository.Insert(user);
             _context.SaveChanges();
@@ -33,8 +32,6 @@ namespace TutorialProjectAPI.Controllers
         [HttpPut("{id}")]
         public IActionResult EditUser(Guid id, [FromBody] UserDB user)
         {
-            if (user == null || user.Id != id)
-                return BadRequest();
 
             _userRepository.Update(user);
             _context.SaveChanges();
@@ -45,8 +42,6 @@ namespace TutorialProjectAPI.Controllers
         public IActionResult DeleteUser(Guid id)
         {
             var user = _userRepository.GetById(id);
-            if (user == null)
-                return NotFound();
 
             _userRepository.Delete(user);
             _context.SaveChanges();
@@ -64,8 +59,7 @@ namespace TutorialProjectAPI.Controllers
         public IActionResult GetUserById(Guid id)
         {
             var user = _userRepository.GetById(id);
-            if (user == null)
-                return NotFound();
+
 
             return Ok(user);
         }

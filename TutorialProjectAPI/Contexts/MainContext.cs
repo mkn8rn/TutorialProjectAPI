@@ -7,12 +7,32 @@ namespace TutorialProjectAPI.Contexts
     {
         public MainContext(DbContextOptions<MainContext> options) : base(options)
         {
-            //todo
+            // todo
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            //todo
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<PostDB>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReplyDB>()
+                .HasOne(r => r.Post)
+                .WithMany(p => p.Replies)
+                .HasForeignKey(r => r.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ReplyDB>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
         public DbSet<UserDB> Users { get; set; }
+        public DbSet<PostDB> Posts { get; set; }
+        public DbSet<ReplyDB> Replies { get; set; }
     }
 }
