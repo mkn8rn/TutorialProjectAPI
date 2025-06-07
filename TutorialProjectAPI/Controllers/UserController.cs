@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using TutorialProjectAPI.Contexts;
+﻿using Microsoft.AspNetCore.Mvc;
 using TutorialProjectAPI.Models;
 using TutorialProjectAPI.Repositories;
+using TutorialProjectAPI.Contexts;
+
 
 namespace TutorialProjectAPI.Controllers
 {
@@ -10,64 +10,58 @@ namespace TutorialProjectAPI.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        private readonly IdentifiableRepository<UserDB> _userRepository;
+        private readonly IIdentifiableRepository<UserDB> _userRepository;
         private readonly MainContext _context;
 
-        public UserController(IdentifiableRepository<UserDB> userRepository, MainContext context)
+        public UserController(IIdentifiableRepository<UserDB> userRepository, MainContext context)
         {
             _userRepository = userRepository;
             _context = context;
         }
 
-        [HttpPost]
-        public IActionResult CreateUser([FromBody] UserDB user)
-        {
-            if (user == null)
-                return BadRequest();
+        [HttpGet]
+        public async Task<IActionResult> GetAll() =>
+            Ok(await _userRepository.GetAllAsync());
 
-            _userRepository.Insert(user);
-            _context.SaveChanges();
-            return Ok();
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(Guid id)
+        {
+            var user = await _userRepository.GetByIdAsync(id);
+            return user == null ? NotFound() : Ok(user);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Create(UserDB user)
+        {
+            user.Id = Guid.NewGuid();
+            await _userRepository.AddAsync(user);
+            await _userRepository.SaveAsync();
+            return CreatedAtAction(nameof(GetById), new { id = user.Id }, user);
         }
 
         [HttpPut("{id}")]
-        public IActionResult EditUser(Guid id, [FromBody] UserDB user)
+        public async Task<IActionResult> Update(Guid id, UserDB updatedUser)
         {
-            if (user == null || user.Id != id)
-                return BadRequest();
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
 
+            user.Username = updatedUser.Username;
             _userRepository.Update(user);
-            _context.SaveChanges();
-            return Ok();
+            await _userRepository.SaveAsync();
+
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public IActionResult DeleteUser(Guid id)
+        public async Task<IActionResult> Delete(Guid id)
         {
-            var user = _userRepository.GetById(id);
-            if (user == null)
-                return NotFound();
+            var user = await _userRepository.GetByIdAsync(id);
+            if (user == null) return NotFound();
 
             _userRepository.Delete(user);
-            _context.SaveChanges();
-            return Ok();
-        }
+            await _userRepository.SaveAsync();
 
-        [HttpGet]
-        public IActionResult GetAllUsers()
-        {
-            var users = _userRepository.GetAllAsReadOnly();
-            return Ok(users);
-        }
-
-        [HttpGet("{id}")]
-        public IActionResult GetUserById(Guid id)
-        {
-            var user = _userRepository.GetById(id);
-            if (user == null)
-                return NotFound();
-
-            return Ok(user);
+            return NoContent();
         }
     }
 }
