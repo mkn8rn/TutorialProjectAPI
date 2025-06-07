@@ -18,6 +18,7 @@ builder.Services.AddDbContext<MainContext>(options =>
 
 // Add repository
 builder.Services.AddScoped<IdentifiableRepository<UserDB>>();
+builder.Services.AddScoped(typeof(GenericRepository<>));
 
 var app = builder.Build();
 

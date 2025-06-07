@@ -1,13 +1,13 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using TutorialProjectAPI.Contexts;
+﻿using Microsoft.AspNetCore.Mvc;
 using TutorialProjectAPI.Models;
 using TutorialProjectAPI.Repositories;
+using TutorialProjectAPI.Contexts;
+using TutorialProjectAPI.DTOs;
 
 namespace TutorialProjectAPI.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
         private readonly IdentifiableRepository<UserDB> _userRepository;
@@ -20,43 +20,29 @@ namespace TutorialProjectAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateUser([FromBody] UserDB user)
+        public IActionResult CreateUser([FromBody] CreateUserDTO userDto)
         {
-            if (user == null)
-                return BadRequest();
+            var user = new UserDB
+            {
+                Id = Guid.NewGuid(),
+                Username = userDto.Username
+            };
 
             _userRepository.Insert(user);
             _context.SaveChanges();
-            return Ok();
-        }
-
-        [HttpPut("{id}")]
-        public IActionResult EditUser(Guid id, [FromBody] UserDB user)
-        {
-            if (user == null || user.Id != id)
-                return BadRequest();
-
-            _userRepository.Update(user);
-            _context.SaveChanges();
-            return Ok();
-        }
-
-        [HttpDelete("{id}")]
-        public IActionResult DeleteUser(Guid id)
-        {
-            var user = _userRepository.GetById(id);
-            if (user == null)
-                return NotFound();
-
-            _userRepository.Delete(user);
-            _context.SaveChanges();
-            return Ok();
+            return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
         }
 
         [HttpGet]
-        public IActionResult GetAllUsers()
+        public IActionResult GetUsers()
         {
-            var users = _userRepository.GetAllAsReadOnly();
+            var users = _userRepository.GetAllAsReadOnly()
+                .Select(u => new UserDto
+                {
+                    Id = u.Id,
+                    Username = u.Username
+                });
+
             return Ok(users);
         }
 
@@ -69,5 +55,31 @@ namespace TutorialProjectAPI.Controllers
 
             return Ok(user);
         }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateUsername(Guid id, [FromBody] CreateUserDTO dto)
+        {
+            var user = _userRepository.GetById(id);
+            if (user == null)
+                return NotFound();
+
+            user.Username = dto.Username;
+            _userRepository.Update(user);
+            _context.SaveChanges();
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeleteUser(Guid id)
+        {
+            var user = _userRepository.GetById(id);
+            if (user == null)
+                return NotFound();
+
+            _userRepository.Delete(user);
+            _context.SaveChanges();
+            return NoContent();
+        }
     }
 }
+
