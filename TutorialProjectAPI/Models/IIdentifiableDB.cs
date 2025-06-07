@@ -1,7 +1,9 @@
-﻿namespace TutorialProjectAPI.Models
+﻿using System;
+
+namespace TutorialProjectAPI.Models
 {
     public interface IIdentifiableDB
     {
-        public Guid Id { get; set; }
+        Guid Id { get; set; }
     }
 }
