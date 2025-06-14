@@ -28,5 +28,7 @@ namespace TutorialProjectAPI.Contexts
         public DbSet<UserDB> Users { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Reply> Replies { get; set; }
+        public DbSet<ImageDB> Images { get; set; }
+
     }
 }
