@@ -10,5 +10,8 @@ namespace TutorialProjectAPI.Models
         public Guid UserId { get; set; }
         public UserDB User { get; set; }
         public ICollection<ReplyDB> Replies { get; set; }
+
+        public Guid? ImageId { get; set; }
+        public ImageDB Image { get; set; }
     }
 }

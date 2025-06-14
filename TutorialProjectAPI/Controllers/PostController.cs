@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using TutorialProjectAPI.Contexts;
 using TutorialProjectAPI.Models;
 using TutorialProjectAPI.Repositories;
@@ -40,11 +41,37 @@ namespace TutorialProjectAPI.Controllers
                     if (!_context.Users.Any(u => u.Id == postDto.UserId))
                         return BadRequest($"User with ID {postDto.UserId} does not exist.");
 
+                    Guid? imageId = null;
+
+                    // Handle image creation or reference
+                    if (!string.IsNullOrWhiteSpace(postDto.ImageBase64))
+                    {
+                        if (postDto.ImageBase64.Length > 136000)
+                            return BadRequest("Image exceeds 100kb base64 size limit.");
+
+                        var image = new ImageDB
+                        {
+                            Id = Guid.NewGuid(),
+                            Base64Image = postDto.ImageBase64
+                        };
+                        _context.Images.Add(image);
+                        _context.SaveChanges();
+                        imageId = image.Id;
+                    }
+                    else if (postDto.ImageId.HasValue)
+                    {
+                        // Check if the referenced image exists
+                        if (!_context.Images.Any(i => i.Id == postDto.ImageId.Value))
+                            return BadRequest($"Image with ID {postDto.ImageId.Value} does not exist.");
+                        imageId = postDto.ImageId.Value;
+                    }
+
                     var post = new PostDB
                     {
                         Id = Guid.NewGuid(),
                         Body = postDto.Body,
                         UserId = postDto.UserId,
+                        ImageId = imageId,
                         Replies = new List<ReplyDB>()
                     };
 
@@ -84,6 +111,88 @@ namespace TutorialProjectAPI.Controllers
             }
         }
 
-        // ... other CRUD endpoints ...
+        [HttpGet]
+        public IActionResult GetAllPosts()
+        {
+            var posts = _context.Posts
+                .Include(p => p.Image)
+                .Include(p => p.User)
+                .Include(p => p.Replies)
+                .AsNoTracking()
+                .ToList();
+
+            return Ok(posts);
+        }
+
+        [HttpGet("{id}")]
+        public IActionResult GetPostById(Guid id)
+        {
+            var post = _context.Posts
+                .Include(p => p.Image)
+                .Include(p => p.User)
+                .Include(p => p.Replies)
+                .AsNoTracking()
+                .FirstOrDefault(p => p.Id == id);
+
+            if (post == null)
+                return NotFound();
+
+            return Ok(post);
+        }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdatePost(Guid id, [FromBody] PostWithRepliesDTO postDto)
+        {
+            var post = _context.Posts.Include(p => p.Replies).FirstOrDefault(p => p.Id == id);
+            if (post == null)
+                return NotFound();
+
+            // Validate UserId
+            if (!_context.Users.Any(u => u.Id == postDto.UserId))
+                return BadRequest($"User with ID {postDto.UserId} does not exist.");
+
+            post.Body = postDto.Body;
+            post.UserId = postDto.UserId;
+
+            if (!string.IsNullOrWhiteSpace(postDto.ImageBase64))
+            {
+                if (postDto.ImageBase64.Length > 136000)
+                    return BadRequest("Image exceeds 100kb base64 size limit.");
+
+                var image = new ImageDB
+                {
+                    Id = Guid.NewGuid(),
+                    Base64Image = postDto.ImageBase64
+                };
+                _context.Images.Add(image);
+                _context.SaveChanges();
+                post.ImageId = image.Id;
+            }
+            else if (postDto.ImageId.HasValue)
+            {
+                if (!_context.Images.Any(i => i.Id == postDto.ImageId.Value))
+                    return BadRequest($"Image with ID {postDto.ImageId.Value} does not exist.");
+                post.ImageId = postDto.ImageId.Value;
+            }
+            else
+            {
+                post.ImageId = null;
+            }
+
+            _context.SaveChanges();
+            return Ok(post);
+        }
+
+        [HttpDelete("{id}")]
+        public IActionResult DeletePost(Guid id)
+        {
+            var post = _context.Posts.FirstOrDefault(p => p.Id == id);
+            if (post == null)
+                return NotFound();
+
+            _postRepository.Delete(post);
+            _context.SaveChanges();
+            return Ok();
+        }
     }
 }

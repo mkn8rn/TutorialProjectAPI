@@ -7,6 +7,8 @@ namespace TutorialProjectAPI.Models
     {
         public string Body { get; set; }
         public Guid UserId { get; set; }
+        public string? ImageBase64 { get; set; }
+        public Guid? ImageId { get; set; }
         public List<ReplyDTO> Replies { get; set; }
     }
 
