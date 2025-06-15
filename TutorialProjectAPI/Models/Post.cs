@@ -20,6 +20,10 @@ namespace TutorialProjectAPI.Models
         public UserDB User { get; set; }
 
         public List<Reply> Replies { get; set; }
+
+        public int? ImageId { get; set; }
+        public ImageDB Image { get; set; }
+
     }
 
 

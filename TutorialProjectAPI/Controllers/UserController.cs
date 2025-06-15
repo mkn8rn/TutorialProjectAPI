@@ -64,9 +64,28 @@ namespace TutorialProjectAPI.Controllers
                 return NotFound();
 
             user.Username = dto.Username;
+
+            if (dto.AvatarImageId.HasValue)
+            {
+                var image = _context.Images.Find(dto.AvatarImageId.Value);
+                if (image == null)
+                    return BadRequest("Avatar image not found");
+                user.AvatarImage = image;
+                user.AvatarImageId = dto.AvatarImageId.Value;
+            }
             _userRepository.Update(user);
             _context.SaveChanges();
             return NoContent();
+
+
+            /*var user = _userRepository.GetById(id);
+            if (user == null)
+                return NotFound();
+
+            user.Username = dto.Username;
+            _userRepository.Update(user);
+            _context.SaveChanges();
+            return NoContent();*/
         }
 
         [HttpDelete("{id}")]

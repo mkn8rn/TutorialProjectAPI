@@ -4,6 +4,7 @@
     {
 
         public string Username { get; set; }
+        public int? AvatarImageId { get; set; }
     }
 
 }

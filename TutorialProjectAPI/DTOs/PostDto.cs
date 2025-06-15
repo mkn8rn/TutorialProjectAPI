@@ -6,6 +6,8 @@
         public string Title { get; set; }
         public string Body { get; set; }
         public string Username { get; set; } // From User
+        public int? AvatarImageId { get; set; }
+
     }
 
 }

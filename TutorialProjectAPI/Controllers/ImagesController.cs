@@ -27,6 +27,11 @@ namespace TutorialProjectAPI.Controllers
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded.");
 
+            if (file.Length > 2 * 1024 * 1024)
+            {
+                return BadRequest("File is too large");
+            }
+
             if (!file.ContentType.StartsWith("image/"))
                 return BadRequest("Only image files are allowed.");
 

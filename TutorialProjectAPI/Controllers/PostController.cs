@@ -62,12 +62,14 @@ namespace TutorialProjectAPI.Controllers
                     PostId = p.PostId,
                     Title = p.Title,
                     Body = p.Body,
-                    Username = p.User.Username
+                    Username = p.User.Username,
+                    AvatarImageId = p.User.AvatarImageId // Assuming this is set up in User model
                 })
                 .ToList();
 
             return Ok(posts);
         }
+
 
         [HttpPut("{id}")]
         public IActionResult UpdatePost(int id, [FromBody] CreatePostWithTempIdDTO dto)
